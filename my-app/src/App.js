@@ -12,6 +12,7 @@ import Login from "./ComponentsFol/Login";
 import HomePage from "./ComponentsFol/HomePage";
 import Navbar from "./ComponentsFol/Navbar";
 import DetectionOptions from "./ComponentsFol/DetectionOptions";
+import AudioFraudDetection from "./ComponentsFol/AudioFraudDetection";
 
 const App = () => {
   const { user, logout } = useContext(FirebaseContext);
@@ -41,6 +42,7 @@ const App = () => {
           />
           {user && <Route path="/home" element={<HomePage />} />}
           <Route path="/detection" element={<DetectionOptions />} />
+          <Route path="/audio-detection" element={<AudioFraudDetection />} />
         </Routes>
       </Router>
     </>

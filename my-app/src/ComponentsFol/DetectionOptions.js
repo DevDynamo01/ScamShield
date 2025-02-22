@@ -18,7 +18,7 @@ const DetectionOptions = () => {
           <p>
             Upload a recorded audio file to analyze and detect fraudulent calls.
           </p>
-          <button onClick={() => navigate("/upload-audio")}>
+          <button onClick={() => navigate("/audio-detection")}>
             Submit Audio
           </button>
         </div>
