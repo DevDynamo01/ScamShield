@@ -5,25 +5,89 @@ import joblib
 import os
 import json
 from genai import gen_ai_json
+import requests
+from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 cors_origin = os.getenv("CORS_ALLOWED_ORIGIN", "*") 
 socketio = SocketIO(app, cors_allowed_origins=cors_origin)
-
-
 CORS(app)
-
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(base_dir, 'model', 'model2.pkl')
 vectorizer_path = os.path.join(base_dir, 'model', 'vectorizer2.pkl')
-
-# Load model and vectorizer
 model = joblib.load(model_path)
 vectorizer = joblib.load(vectorizer_path)
 
-# Store previous messages for each ID
 store = {}
+
+def transcribe_audio(audio_file, mimetype, language="en"):
+    """Transcribe audio using Deepgram API"""
+    url = f"https://api.deepgram.com/v1/listen?language={language}"
+    headers = {
+        "Authorization": f"Token {os.getenv('DEEPGRAM_API_KEY')}",
+        "Content-Type": mimetype,
+    }
+    try:
+        response = requests.post(url, data=audio_file.read(), headers=headers)
+        response.raise_for_status()
+        return response.json()["results"]["channels"][0]["alternatives"][0]["transcript"]
+    except Exception as e:
+        print(f"Transcription error: {str(e)}")
+        raise
+
+@app.route("/transcribe/<language>", methods=["POST"])
+def transcribe(language):
+    """Handle audio transcription requests"""
+    try:
+        if "audio" not in request.files:
+            return jsonify({"error": "No audio file provided"}), 400
+        
+        audio_file = request.files["audio"]
+        if not audio_file:
+            return jsonify({"error": "Empty file"}), 400
+            
+        mimetype = audio_file.mimetype
+        if language not in ["english", "hindi"]:
+            return jsonify({"error": "Unsupported language"}), 400
+            
+        lang_code = "en" if language == "english" else "hi"
+        transcript = transcribe_audio(audio_file, mimetype, lang_code)
+        
+        # Process transcript through fraud detection
+        id = request.form.get('id', 'default')
+        if id not in store:
+            store[id] = [transcript]
+        else:
+            store[id].append(transcript)
+
+        text = ' '.join(store[id])
+        if len(store[id]) > 4:
+            store[id].pop(0)
+
+        # Run fraud detection
+        input_transformed = vectorizer.transform([text]).toarray()
+        probabilities = model.predict_proba(input_transformed)
+        positive_prob = probabilities[0, 1] if probabilities.shape[1] > 1 else 0.5
+        score = 100 - round(positive_prob * 100)
+
+        if score > 50:
+            result = gen_ai_json(text)
+            if isinstance(result, str):
+                result = json.loads(result)
+            result["transcript"] = transcript
+            return jsonify(result)
+
+        return jsonify({
+            "transcript": transcript,
+            "fraud_probability": score
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/', methods=['GET'])
 def home():
