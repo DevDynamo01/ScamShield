@@ -139,7 +139,10 @@ def predict():
 
     if score > 50:
         result = gen_ai_json(text)
-        result = json.loads(result)
+        if len(result) < 10:
+                result = {"fraud_probability": score}
+        if isinstance(result, str):
+                result = json.loads(result)
         return jsonify(result)
 
     return jsonify({"fraud_probability": score})
@@ -178,6 +181,10 @@ def handle_predict_event(data):
 
     if score > 50:
         result = gen_ai_json(text)
+        if len(result) < 10:
+                result = {"fraud_probability": score}
+        if isinstance(result, str):
+                result = json.loads(result)
         emit('prediction', result)
     else:
         emit('prediction', {"fraud_probability": score})

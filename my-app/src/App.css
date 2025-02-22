@@ -108,3 +108,39 @@ h1 {
   text-align: center;
   margin-top: 50px;
 }
+
+
+/* =============Transcription css============== */
+
+.transcription-container{
+  width:100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+
+.input-box{
+  width:500px;
+  height:300px;
+  border:2px solid grey;
+  border-radius: 5px;;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+}
+.select-input{
+  width:120px;
+  border-radius: 5px;
+  height: 30px;
+}
+
+.output-box{
+  width:500px;
+  border:1px solid green;
+  height:50px;
+}
