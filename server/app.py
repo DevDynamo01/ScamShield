@@ -34,9 +34,23 @@ def transcribe_audio(audio_file, mimetype, language="en"):
     try:
         response = requests.post(url, data=audio_file.read(), headers=headers)
         response.raise_for_status()
-        return response.json()["results"]["channels"][0]["alternatives"][0]["transcript"]
+        result = response.json()
+        
+        # Safely navigate the JSON response
+        if (result 
+            and "results" in result 
+            and "channels" in result["results"]
+            and len(result["results"]["channels"]) > 0
+            and "alternatives" in result["results"]["channels"][0]
+            and len(result["results"]["channels"][0]["alternatives"]) > 0
+            and "transcript" in result["results"]["channels"][0]["alternatives"][0]):
+            return result["results"]["channels"][0]["alternatives"][0]["transcript"]
+        else:
+            raise ValueError("Invalid response structure from Deepgram API")
+            
     except Exception as e:
         print(f"Transcription error: {str(e)}")
+        print(f"Response content: {response.content if 'response' in locals() else 'No response'}")
         raise
 
 @app.route("/transcribe/<language>", methods=["POST"])
@@ -50,6 +64,9 @@ def transcribe(language):
         if not audio_file:
             return jsonify({"error": "Empty file"}), 400
             
+        # Reset file pointer to beginning
+        audio_file.seek(0)
+            
         mimetype = audio_file.mimetype
         if language not in ["english", "hindi"]:
             return jsonify({"error": "Unsupported language"}), 400
@@ -57,16 +74,10 @@ def transcribe(language):
         lang_code = "en" if language == "english" else "hi"
         transcript = transcribe_audio(audio_file, mimetype, lang_code)
         
-        # Process transcript through fraud detection
-        id = request.form.get('id', 'default')
-        if id not in store:
-            store[id] = [transcript]
-        else:
-            store[id].append(transcript)
-
-        text = ' '.join(store[id])
-        if len(store[id]) > 4:
-            store[id].pop(0)
+        if not transcript:
+            return jsonify({"error": "Failed to transcribe audio"}), 500
+            
+        text = transcript
 
         # Run fraud detection
         input_transformed = vectorizer.transform([text]).toarray()
@@ -74,8 +85,13 @@ def transcribe(language):
         positive_prob = probabilities[0, 1] if probabilities.shape[1] > 1 else 0.5
         score = 100 - round(positive_prob * 100)
 
+        print("scroe : ", score)
+
         if score > 50:
-            result = gen_ai_json(text)
+            result = gen_ai_json(text) 
+            print("result:", result)
+            if len(result) < 10:
+                result = {"fraud_probability": score}
             if isinstance(result, str):
                 result = json.loads(result)
             result["transcript"] = transcript
@@ -87,6 +103,7 @@ def transcribe(language):
         })
 
     except Exception as e:
+        print(f"Error in transcribe endpoint: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/', methods=['GET'])
