@@ -42,6 +42,7 @@ def transcribe_audio(audio_file, mimetype, language="en"):
 @app.route("/transcribe/<language>", methods=["POST"])
 def transcribe(language):
     """Handle audio transcription requests"""
+    print("call from frontend")
     try:
         if "audio" not in request.files:
             return jsonify({"error": "No audio file provided"}), 400
@@ -56,7 +57,7 @@ def transcribe(language):
             
         lang_code = "en" if language == "english" else "hi"
         transcript = transcribe_audio(audio_file, mimetype, lang_code)
-        
+        print("orinting transcitp: ",transcript)
         # Process transcript through fraud detection
         id = request.form.get('id', 'default')
         if id not in store:
