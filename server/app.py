@@ -55,7 +55,6 @@ def transcribe_audio(audio_file, mimetype, language="en"):
 
 @app.route("/transcribe/<language>", methods=["POST"])
 def transcribe(language):
-    """Handle audio transcription requests"""
     try:
         if "audio" not in request.files:
             return jsonify({"error": "No audio file provided"}), 400
@@ -139,7 +138,10 @@ def predict():
 
     if score > 50:
         result = gen_ai_json(text)
-        result = json.loads(result)
+        if len(result) < 10:
+                result = {"fraud_probability": score}
+        if isinstance(result, str):
+                result = json.loads(result)
         return jsonify(result)
 
     return jsonify({"fraud_probability": score})
@@ -178,6 +180,10 @@ def handle_predict_event(data):
 
     if score > 50:
         result = gen_ai_json(text)
+        if len(result) < 10:
+                result = {"fraud_probability": score}
+        if isinstance(result, str):
+                result = json.loads(result)
         emit('prediction', result)
     else:
         emit('prediction', {"fraud_probability": score})
