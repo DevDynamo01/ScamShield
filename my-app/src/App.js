@@ -13,6 +13,9 @@ import HomePage from "./ComponentsFol/HomePage";
 import Navbar from "./ComponentsFol/Navbar";
 import DetectionOptions from "./ComponentsFol/DetectionOptions";
 import AudioFraudDetection from "./ComponentsFol/AudioFraudDetection";
+import Transcription from "./components/Transcription";
+import Dictaphone from "./Components2/Dictaphone";
+import { SocketProvider } from "./AppContext/SocketContext";
 
 const App = () => {
   const { user, logout } = useContext(FirebaseContext);
@@ -42,7 +45,15 @@ const App = () => {
           />
           {user && <Route path="/home" element={<HomePage />} />}
           <Route path="/detection" element={<DetectionOptions />} />
-          <Route path="/audio-detection" element={<AudioFraudDetection />} />
+          <Route path="/audio-detection" element={<Transcription />} />
+          <Route
+            path="/live-detection"
+            element={
+              <SocketProvider>
+                <Dictaphone></Dictaphone>
+              </SocketProvider>
+            }
+          />
         </Routes>
       </Router>
     </>

@@ -1,16 +1,16 @@
 import { useState, useRef } from "react";
 import axios from "axios";
-import { FaMicrophone } from "react-icons/fa";
+import { FaMicrophone } from "react-icons/fa6";
 import "./Transcription.css";
 import Loader from "./Loader";
-import PopFile from "./PopFile";
+import ResultCard from "./ResultCard";
 
 function Transcription() {
   const [audioFile, setAudioFile] = useState(null);
   const [language, setLanguage] = useState("english");
   const [transcript, setTranscript] = useState("");
   const [loading, setLoading] = useState(false);
-  const [fraudData, setFraudData] = useState(null); // State to hold fraud analysis data
+  const [fraudData, setFraudData] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -37,10 +37,7 @@ function Transcription() {
         }
       );
 
-      console.log("API Response: ", data);
       setTranscript(data.transcript);
-
-      // Set fraud analysis data
       setFraudData({
         probability: data.fraud_probability,
         reason: data.reason,
@@ -58,7 +55,8 @@ function Transcription() {
       {loading && <Loader />}
 
       {fraudData && (
-        <PopFile
+        <ResultCard
+          transcript={transcript}
           probability={fraudData.probability}
           reason={fraudData.reason}
           onClose={() => setFraudData(null)}
@@ -72,7 +70,8 @@ function Transcription() {
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
-          className="select-input">
+          className="select-input"
+        >
           <option value="english">English</option>
           <option value="hindi">Hindi</option>
         </select>
@@ -93,7 +92,6 @@ function Transcription() {
           {loading ? "Transcribing..." : "Upload & Transcribe"}
         </button>
       </div>
-
     </div>
   );
 }
