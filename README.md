@@ -14,7 +14,7 @@ Frontend: React.js (Run using npm install && npm start)
 
 ## Installation
 #Backend Setup
--Clone the repository :git clone https://github.com/Sagar1917118/ScamShield.git cd ScamShield
+-Clone the repository :git clone https://github.com/DevDynamo01/ScamShield cd ScamShield
 -Install Dependicies : pip install -r requirements.txt
 - Set up environment variables: GOOGLE_API_KEY=your_gemini_api_key
 DEEPGRAM_API_KEY=your_deepgram_api_key
